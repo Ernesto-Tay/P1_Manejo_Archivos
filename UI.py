@@ -12,7 +12,7 @@ El guardado se hará en JSON con el fin de conservar los tipos de valor almacena
 
 """
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit)
-from PyQt6.QtGui import QGuiApplication
+from PyQt6.QtGui import QGuiApplication, QAction
 
 class Sistema(QMainWindow):
     def __init__(self):
@@ -29,12 +29,32 @@ class Sistema(QMainWindow):
         self.contenedor = QStackedWidget()
         self.setCentralWidget(self.contenedor)
 
+        # Asignación de distintas pestañas en función de la opción del menú elegida
+        self.contenedor.addWidget(self.archivo_page())
+        self.contenedor.addWidget(self.edicion_page())
+        self.contenedor.addWidget(self.ver_page())
+        self.contenedor.addWidget(self.settings_page())
+
         #Barrita superior
         self.menu = self.menuBar()
-        self.m_archivo = self.menu.addMenu("Archivo")
-        self.m_edits = self.menu.addMenu("Edición")
-        self.m_ver = self.menu.addMenu("Ver")
-        self.m_settings = self.menu.addMenu("Configuración")
+
+
+        # --- BOTONES Y ACCIONES ---
+        self.m_archivo = QAction("Archivo", self)
+        self.m_archivo.triggered.connect(self.contenedor.setCurrentIndex[0])
+        self.menu.addAction(self.m_archivo)
+
+        self.m_edits = QAction("Edición", self)
+        self.m_edits.triggered.connect(self.contenedor.setCurrentIndex[1])
+        self.menu.addAction(self.m_edits)
+
+        self.m_ver = QAction("Ver", self)
+        self.m_ver.triggered.connect(self.contenedor.setCurrentIndex[2])
+        self.menu.addAction(self.m_ver)
+
+        self.m_settings = QAction("Configuración", self)
+        self.m_settings.triggered.connect(self.contenedor.setCurrentIndex[3])
+        self.menu.addAction(self.m_settings)
 
 
         # --- DATOS EDITABLES POR EL USUARIO ---
@@ -57,9 +77,17 @@ class Sistema(QMainWindow):
         #barra menú
         self.m_color = "#777777"
 
+    def color_upd(self): pass
+    def user_upd(self): pass
+    def idioma_upd(self): pass
+    def f_tamano_upd(self): pass
+    def f_color_upd(self): pass
+    def m_color_upd(self): pass
 
     def settings_page(self): pass
-
+    def archivo_page(self): pass
+    def edicion_page(self): pass
+    def ver_page(self): pass
 
 app = QApplication(sys.argv)
 system = Sistema()
