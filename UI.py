@@ -11,8 +11,9 @@ Para el nombre de usuario se podrá escribir texto, que no sea ni NULO ni de un 
 El guardado se hará en JSON con el fin de conservar los tipos de valor almacenados.
 
 """
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit)
-from PyQt6.QtGui import QGuiApplication, QAction
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QHBoxLayout, QFileDialog)
+from PyQt6.QtGui import QGuiApplication, QAction, QPixmap, QPainter, QPainterPath
+from PyQt6.QtCore import Qt
 
 class Sistema(QMainWindow):
     def __init__(self):
@@ -33,7 +34,7 @@ class Sistema(QMainWindow):
         self.contenedor.addWidget(self.archivo_page())
         self.contenedor.addWidget(self.edicion_page())
         self.contenedor.addWidget(self.ver_page())
-        self.contenedor.addWidget(self.settings_page())
+        self.contenedor.addWidget(settings_p)
 
         #Barrita superior
         self.menu = self.menuBar()
@@ -84,10 +85,97 @@ class Sistema(QMainWindow):
     def f_color_upd(self): pass
     def m_color_upd(self): pass
 
-    def settings_page(self): pass
     def archivo_page(self): pass
     def edicion_page(self): pass
     def ver_page(self): pass
+
+
+class settings_p(QWidget):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        # SECCIÓN DEL PERFIL
+        perfil = QHBoxLayout()
+        layout.addWidget(perfil)
+
+        # IZQUIERDA - foto de perfil y selector de esta
+        foto_layout = QVBoxLayout()
+        self.foto_shaper = ImagenPerfil()
+        self.foto_archivo = SubidorArchivos()
+        foto_layout.addWidget(self.foto_shaper)
+        foto_layout.addWidget(self.foto_archivo)
+
+        p_userData = QVBoxLayout()
+        p_userData.addWidget(QLabel("Nombre de usuario"))
+        self.nombre_user = QLabel("wasa")
+        nombre_upd = QPushButton("Cambiar Nombre")
+        nombre_upd.clicked.connect(self.cambianombre)
+
+    def cambianombre(self):
+        nom_upd = QLineEdit("Ingrese nuevo nombre...")
+        nom_upd.returnPressed.connect(self.nom_upd)
+
+    def nom_upd(self, newName):
+        self.nombre_user = QLabel(str(newName).strip())
+
+
+class SubidorArchivos(QWidget):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        # Texto debajo
+        self.t_perfil = QLabel("Cambiar foto de perfil")
+        layout.addWidget(self.t_perfil)
+
+        boton = QPushButton("Seleccionar foto")
+        boton.clicked.connect(self.foto_select)
+        layout.addWidget(boton)
+        self.ruta = None
+
+
+    def foto_select(self):
+        ruta, _ = QFileDialog.getOpenFileName(self, "seleccionar archivo", "", "Imágenes (*.png *.jpg *jpeg);;")
+        if ruta:
+            self.ruta = ruta
+
+
+class ImagenPerfil(QLabel):
+    def __init__(self, ruta_imagen, diametro=100, parent=None):
+        super().__init__(parent)
+        self.diametro = diametro
+        self.setFixedSize(diametro, diametro)
+
+        pixmap_original = QPixmap(ruta_imagen)
+        self.setPixmap(self.recortar_circulo(pixmap_original))
+
+    def recortar_circulo(self, pixmap):
+        # Escala la imagen para llenar el círculo
+        pixmap = pixmap.scaled(
+            self.diametro, self.diametro,
+            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+            Qt.TransformationMode.SmoothTransformation
+        )
+
+        # Crea un pixmap nuevo con fondo transparente
+        circular = QPixmap(self.diametro, self.diametro)
+        circular.fill(Qt.GlobalColor.transparent)
+
+        painter = QPainter(circular)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # Define la forma circular como "molde" de recorte
+        path = QPainterPath()
+        path.addEllipse(0, 0, self.diametro, self.diametro)
+        painter.setClipPath(path)
+
+        painter.drawPixmap(0, 0, pixmap)
+        painter.end()
+
+        return circular
 
 app = QApplication(sys.argv)
 system = Sistema()
