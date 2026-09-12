@@ -11,7 +11,7 @@ Para el nombre de usuario se podrá escribir texto, que no sea ni NULO ni de un 
 El guardado se hará en JSON con el fin de conservar los tipos de valor almacenados.
 
 """
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QHBoxLayout, QFileDialog, QMessageBox, QScrollArea, QFrame, QGroupBox)
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QHBoxLayout, QFileDialog, QMessageBox, QScrollArea, QFrame, QGroupBox, QComboBox, QSpinBox)
 from PyQt6.QtGui import QGuiApplication, QAction, QPixmap, QPainter, QPainterPath
 from PyQt6.QtCore import Qt, pyqtSignal
 class ColoresConfig:
@@ -204,6 +204,7 @@ class Sistema(QMainWindow):
         self.idioma = "es"
         self.idioma_manager = Idiomas()
         self.idioma_upd(self.idioma)
+        self.settings_page.idioma.connect(self.idioma_upd)
 
 
 
@@ -252,6 +253,7 @@ class Sistema(QMainWindow):
 
 
 class settings_p(QWidget):
+    idioma = pyqtSignal(str)
     def __init__(self, parent = None, idioma = "es"):
         super().__init__(parent)
         layout = QVBoxLayout()
@@ -282,6 +284,7 @@ class settings_p(QWidget):
 
         self.foto_archivo.arch.connect(self.foto_shaper.carga_imagen)
 
+        # DERECHA - zona para cambiar el nombre de perfil acual
         self.p_userData = QVBoxLayout()
         self.nombreHeader = QLabel("")
         self.p_userData.addWidget(self.nombreHeader)
@@ -300,6 +303,33 @@ class settings_p(QWidget):
         self.nom_upd_input.hide()
 
         layout.addWidget(self.linea_division())
+
+
+        # SECCIÓN GENERAL
+        general = QHBoxLayout()
+        self.grupo_general = QGroupBox()
+        self.grupo_general.setLayout(general)
+        layout.addWidget(self.grupo_general)
+
+        # IZQUIERDA - accesibilidad
+        self.acces_layout = QVBoxLayout()
+        self.Access_title = QLabel()
+        self.idioma_title = QLabel()
+        self.idioma_select = QComboBox()
+        self.idioma_select.addItems(["español/es-ES", "English/en-US"])
+        self.idioma_select.CurrentIndexChanged.connect(self.cambia_idioma)
+
+        self.texto_title = QLabel()
+        self.texto_select = QSpinBox()
+        self.texto_select.setRange(8, 32)
+        self.texto_select.setValue(12)
+        self.texto_select.setSuffix(" pt")
+        self.texto_select.valueChanged.connect(self.cambia_tamano)
+
+        # DERECHA - apariencia
+
+
+
         self.t = None
 
 
@@ -308,6 +338,12 @@ class settings_p(QWidget):
     def cambianombre(self):
         self.nom_upd_input.show()
         self.nombre_upd.hide()
+
+    def cambia_idioma(self, index):
+        resultado = "es" if index == 0 else "en"
+        self.idioma.emit(resultado)
+
+    def cambia_tamano(self): pass
 
     def nom_upd(self, newName, input_place):
         if 1 < len(newName.strip()) < 40:
