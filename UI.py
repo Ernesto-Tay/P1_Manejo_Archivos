@@ -21,18 +21,18 @@ class ColoresConfig:
                     "fondo":         "#f4f6fa",
                     "fondo_tarjeta": "#ffffff",
                     "borde":         "#d9dee6",
-                    "acento":        "#e0b93b",
+                    "acento":        "#1E1700",
                     "acento_hover":  "#c0532f",
                 },
                 "oscuro": {
                     "fondo":         "#1e2128",
                     "fondo_tarjeta": "#2a2e37",
                     "borde":         "#3a3f4b",
-                    "acento":        "#d12121",
+                    "acento":        "#910f0f",
                     "acento_hover":  "#993131",
             },
         }
-        self.color_menu = {"claro": "#DC00E0", "oscuro":"#004cff"}
+        self.color_menu = {"claro": "#E05D00", "oscuro":"#ff0000"}
         self.color_letra = {"claro": "#22262e", "oscuro":"#e6e8ec"}
         self.tamano_letra = 12
 
@@ -47,7 +47,7 @@ class ColoresConfig:
             background-color: {colores['fondo_tarjeta']};
             border: 1px solid {colores['borde']};
             border-radius: 10px;
-            color: {colores['texto']};
+            color: {texto};
         }}
 
         QPushButton {{
@@ -60,6 +60,8 @@ class ColoresConfig:
         QPushButton:hover {{ background-color: {colores['acento_hover']}; }}
 
         QLabel {{ color: {texto}; }}
+
+        QMenuBar {{ background-color: {menu}; }}
         """
 
 
@@ -157,13 +159,16 @@ class Sistema(QMainWindow):
         # tema de la app
         self.tema_select = "claro"
         self.tema_manager = ColoresConfig()
+        self.color_upd(self.tema_select)
 
         # nombre usuario
         self.username = None
 
         # idioma
-        self.idioma = None
+        self.idioma = "es"
         self.idioma_manager = Idiomas()
+        self.idioma_upd(self.idioma)
+
 
 
     def color_upd(self, new_color):
@@ -218,13 +223,17 @@ class settings_p(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(16)
 
-        self.titulo = QLabel("Configuración")
+        self.titulo = QLabel()
         self.titulo.setObjectName("TituloPagina")
         layout.addWidget(self.titulo)
 
+        self.label_titulo = None
+
         # SECCIÓN DEL PERFIL
         perfil = QHBoxLayout()
-        layout.addLayout(perfil)
+        self.grupo_perfil = QGroupBox()
+        self.grupo_perfil.setLayout(perfil)
+        layout.addWidget(self.grupo_perfil)
 
         # IZQUIERDA - foto de perfil y selector de esta
         self.foto_layout = QVBoxLayout()
@@ -257,6 +266,7 @@ class settings_p(QWidget):
         layout.addWidget(self.linea_division())
         self.t = None
 
+
         # SECCIÓN DE EDICIÓN
 
     def cambianombre(self):
@@ -276,7 +286,7 @@ class settings_p(QWidget):
     def retraducir(self):
         self.titulo.setText(self.t["titulo_settings"])
         self.grupo_perfil.setTitle(self.t["grupo_perfil"])
-        self.label_nombre_titulo.setText(self.t["label_nombre"])
+        self.titulo.setText(self.t["label_nombre"])
         self.nombre_upd.setText(self.t["boton_cambiar_nom"])
         self.nom_upd_input.setPlaceholderText(self.t["placeholder_nombre"])
 
