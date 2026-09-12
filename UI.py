@@ -11,7 +11,7 @@ Para el nombre de usuario se podrá escribir texto, que no sea ni NULO ni de un 
 El guardado se hará en JSON con el fin de conservar los tipos de valor almacenados.
 
 """
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QHBoxLayout, QFileDialog, QErrorMessage)
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QHBoxLayout, QFileDialog, QMessageBox, QScrollArea, QFrame)
 from PyQt6.QtGui import QGuiApplication, QAction, QPixmap, QPainter, QPainterPath
 from PyQt6.QtCore import Qt, pyqtSignal
 
@@ -24,7 +24,7 @@ class Sistema(QMainWindow):
         p = QGuiApplication.primaryScreen().geometry()
         x = 2*(p.width())//11
         y = (p.height())//6
-        self.setGeometry(x, y, 600, 400)
+        self.setFixedSize(600, 400)
 
         # inicialización del contenedor
         self.contenedor = QStackedWidget()
@@ -33,11 +33,16 @@ class Sistema(QMainWindow):
         #conexión con funciones encargadas de cada dato, para recuperarlos al momento de cerrar y al momento de cargar
         self.settings_page = settings_p()
 
+        scroll = QScrollArea()
+        scroll.setWidget(self.settings_page)
+        scroll.setWidgetResizable(True)   
+        self.contenedor.addWidget(scroll)   
+
         # Asignación de distintas pestañas en función de la opción del menú elegida
         self.contenedor.addWidget(self.archivo_page())
         self.contenedor.addWidget(self.edicion_page())
         self.contenedor.addWidget(self.ver_page())
-        self.contenedor.addWidget(self.settings_page)
+        self.contenedor.addWidget(scroll)
 
         #Barrita superior
         self.menu = self.menuBar()
@@ -59,8 +64,6 @@ class Sistema(QMainWindow):
         self.m_settings = QAction("Configuración", self)
         self.m_settings.triggered.connect(lambda: self.contenedor.setCurrentIndex(3))
         self.menu.addAction(self.m_settings)
-
-        self.contenedor.setCurrentIndex(3)
 
         # --- DATOS EDITABLES POR EL USUARIO ---
         # tema de la app
@@ -109,6 +112,10 @@ class Sistema(QMainWindow):
         w.setLayout(l)
         return w
 
+class FuenteManager:
+    def __init__(self):
+        self.tamano_fuente = 10
+         
 
 class settings_p(QWidget):
     def __init__(self, parent = None):
@@ -133,23 +140,43 @@ class settings_p(QWidget):
         self.p_userData = QVBoxLayout()
         self.p_userData.addWidget(QLabel("Nombre de usuario"))
         self.nombre_user = QLabel("wasa")
-        nombre_upd = QPushButton("Cambiar Nombre")
-        self.p_userData.addWidget(nombre_upd)
-        nombre_upd.clicked.connect(self.cambianombre)
+        self.nombre_upd = QPushButton("Cambiar Nombre")
+        self.p_userData.addWidget(self.nombre_user)
+        self.p_userData.addWidget(self.nombre_upd)
+        self.nombre_upd.clicked.connect(self.cambianombre)
         perfil.addLayout(self.p_userData)
 
-    def cambianombre(self):
         self.nom_upd_input = QLineEdit(self.nombre_user.text())
+        self.nom_upd_input.setFixedWidth(self.width()//2 - 35)
         self.p_userData.addWidget(self.nom_upd_input)
         self.nom_upd_input.returnPressed.connect(lambda: self.nom_upd(self.nom_upd_input.text(), self.nom_upd_input))
-    
+        self.nom_upd_input.hide()
+
+        layout.addWidget(self.linea_division())
+
+        # SECCIÓN DE 
+
+
+
+    def cambianombre(self):
+        self.nom_upd_input.show()
+        self.nombre_upd.hide()
 
     def nom_upd(self, newName, input_place):
         if 1 < len(newName.strip()) < 40:
             self.nombre_user.setText(newName.strip())
             input_place.hide()
-        else: pass # hace falta editar el mensaje de error
+            self.nombre_upd.show()
+            QMessageBox.information(self, "Éxito", "Nombre actualizado")
+        else:
+            QMessageBox.warning(self, "Error", "El nombre no puede estar vacío ni superar los 40 caracteres")
 
+
+    def linea_division(self):
+        linea = QFrame()
+        linea.setFrameShape(QFrame.Shape.HLine)      
+        linea.setFrameShadow(QFrame.Shadow.Sunken)   
+        return linea
 
 class SubidorArchivos(QWidget):
     arch = pyqtSignal(str)
@@ -178,7 +205,7 @@ class SubidorArchivos(QWidget):
                 print("Formato no soportado")
 
 class ImagenPerfil(QLabel):
-    def __init__(self, diametro=30, parent=None):
+    def __init__(self, diametro=100, parent=None):
         super().__init__(parent)
         self.diametro = diametro
         self.setFixedSize(diametro, diametro)
