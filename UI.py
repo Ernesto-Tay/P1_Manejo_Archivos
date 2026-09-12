@@ -33,14 +33,32 @@ class ColoresConfig:
             },
         }
         self.color_menu = {"claro": "#E05D00", "oscuro":"#ff0000"}
-        self.color_letra = {"claro": "#22262e", "oscuro":"#e6e8ec"}
+        self.color_letra = {"claro": "#000000", "oscuro":"#e6e8ec"}
         self.tamano_letra = 12
 
+    def tamanos(self):
+        base = self.tamano_letra
+        return {
+            "titulo":    base + 6,   
+            "subtitulo": base + 3,  
+            "texto":     base,     
+            "boton":     base - 1,
+        }
+
+    def legibilidad(v, hex_fondo):
+        hex_fondo = hex_fondo.lstrip("#")
+        r, g, b = int(hex_fondo[0:2], 16), int(hex_fondo[2:4], 16), int(hex_fondo[4:6], 16)
+        luminancia = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+        return "#000000" if luminancia > 0.5 else "#ffffff"
+        
     def generar_qss(self, mode):
         colores = self.temas[mode]
         menu = self.color_menu[mode]
         texto = self.color_letra[mode]
+        t_letra = self.tamanos()
         return f"""
+         QWidget {{background-color: {colores['fondo']};}}
         QMainWindow {{ background-color: {colores['fondo']}; }}
 
         QGroupBox {{
@@ -48,20 +66,34 @@ class ColoresConfig:
             border: 1px solid {colores['borde']};
             border-radius: 10px;
             color: {texto};
+            font-size: {t_letra['subtitulo']}pt;
         }}
 
         QPushButton {{
             background-color: {colores['acento']};
-            color: white;
+            color: {self.legibilidad(colores['acento'])};
             border-radius: 8px;
             padding: 8px 16px;
+            font-size: {t_letra['boton']}pt;
         }}
 
         QPushButton:hover {{ background-color: {colores['acento_hover']}; }}
 
-        QLabel {{ color: {texto}; }}
+        QLabel {{ color: {texto};
+                font-size: {t_letra['texto']}pt;
+        }}
+        QLabel#TituloPagina {{
+        color: {texto};
+        font-size: {t_letra['titulo']}pt;
+        font-weight: 700;
+        }}
 
-        QMenuBar {{ background-color: {menu}; }}
+        QMenuBar {{ background-color: {menu}; 
+                    font-size: {t_letra['texto']}pt;
+                    color: {texto};
+                }}
+
+        QLineEdit{{color: {texto};}}
         """
 
 
@@ -81,6 +113,8 @@ class Idiomas:
                     "msg_exito_texto":    "Nombre actualizado",
                     "msg_error_titulo":   "Error",
                     "msg_error_texto":    "El nombre no puede estar vacío ni superar los 40 caracteres",
+                    "label_foto":         "Cambiar foto de perfil",
+                    "boton_foto":         "Seleccionar una foto..."
                 },
                 "en": {
                     "titulo_settings":    "Settings",
@@ -96,6 +130,8 @@ class Idiomas:
                     "msg_exito_texto":    "Name updated",
                     "msg_error_titulo":   "Error",
                     "msg_error_texto":    "Name cannot be empty or exceed 40 characters",
+                    "label_foto":         "Change profile picture",
+                    "boton_foto":         "Browse pictures..."
                 },
             }
 
@@ -286,9 +322,11 @@ class settings_p(QWidget):
     def retraducir(self):
         self.titulo.setText(self.t["titulo_settings"])
         self.grupo_perfil.setTitle(self.t["grupo_perfil"])
-        self.titulo.setText(self.t["label_nombre"])
+        self.nombreHeader.setText(self.t["label_nombre"])
         self.nombre_upd.setText(self.t["boton_cambiar_nom"])
         self.nom_upd_input.setPlaceholderText(self.t["placeholder_nombre"])
+        self.foto_archivo.t_perfil.setText(self.t["label_foto"])
+        self.foto_archivo.boton.setText(self.t["boton_foto"])
 
 
     def linea_division(self):
@@ -308,9 +346,9 @@ class SubidorArchivos(QWidget):
         self.t_perfil = QLabel("")
         layout.addWidget(self.t_perfil)
 
-        boton = QPushButton("")
-        boton.clicked.connect(self.foto_select)
-        layout.addWidget(boton) 
+        self.boton = QPushButton("")
+        self.boton.clicked.connect(self.foto_select)
+        layout.addWidget(self.boton) 
         self.ruta = None
 
 
