@@ -11,9 +11,9 @@ Para el nombre de usuario se podrá escribir texto, que no sea ni NULO ni de un 
 El guardado se hará en JSON con el fin de conservar los tipos de valor almacenados.
 
 """
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QHBoxLayout, QFileDialog)
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QHBoxLayout, QFileDialog, QErrorMessage)
 from PyQt6.QtGui import QGuiApplication, QAction, QPixmap, QPainter, QPainterPath
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 
 class Sistema(QMainWindow):
     def __init__(self):
@@ -30,11 +30,14 @@ class Sistema(QMainWindow):
         self.contenedor = QStackedWidget()
         self.setCentralWidget(self.contenedor)
 
+        #conexión con funciones encargadas de cada dato, para recuperarlos al momento de cerrar y al momento de cargar
+        self.settings_page = settings_p()
+
         # Asignación de distintas pestañas en función de la opción del menú elegida
         self.contenedor.addWidget(self.archivo_page())
         self.contenedor.addWidget(self.edicion_page())
         self.contenedor.addWidget(self.ver_page())
-        self.contenedor.addWidget(settings_p)
+        self.contenedor.addWidget(self.settings_page)
 
         #Barrita superior
         self.menu = self.menuBar()
@@ -42,21 +45,22 @@ class Sistema(QMainWindow):
 
         # --- BOTONES Y ACCIONES ---
         self.m_archivo = QAction("Archivo", self)
-        self.m_archivo.triggered.connect(self.contenedor.setCurrentIndex[0])
+        self.m_archivo.triggered.connect(lambda: self.contenedor.setCurrentIndex(0))
         self.menu.addAction(self.m_archivo)
 
         self.m_edits = QAction("Edición", self)
-        self.m_edits.triggered.connect(self.contenedor.setCurrentIndex[1])
+        self.m_edits.triggered.connect(lambda: self.contenedor.setCurrentIndex(1))
         self.menu.addAction(self.m_edits)
 
         self.m_ver = QAction("Ver", self)
-        self.m_ver.triggered.connect(self.contenedor.setCurrentIndex[2])
+        self.m_ver.triggered.connect(lambda: self.contenedor.setCurrentIndex(2))
         self.menu.addAction(self.m_ver)
 
         self.m_settings = QAction("Configuración", self)
-        self.m_settings.triggered.connect(self.contenedor.setCurrentIndex[3])
+        self.m_settings.triggered.connect(lambda: self.contenedor.setCurrentIndex(3))
         self.menu.addAction(self.m_settings)
 
+        self.contenedor.setCurrentIndex(3)
 
         # --- DATOS EDITABLES POR EL USUARIO ---
         # tema de la app
@@ -85,9 +89,25 @@ class Sistema(QMainWindow):
     def f_color_upd(self): pass
     def m_color_upd(self): pass
 
-    def archivo_page(self): pass
-    def edicion_page(self): pass
-    def ver_page(self): pass
+    # funciones patito para los layouts adicionales (solo para que esta madre no se ande crasheando)
+    def archivo_page(self):
+        w = QWidget()
+        l = QVBoxLayout()
+        l.addWidget(QLabel("Archivo (WIP)"))
+        w.setLayout(l)
+        return w
+    def edicion_page(self):
+        w = QWidget()
+        l = QVBoxLayout()
+        l.addWidget(QLabel("Edición (WIP)"))
+        w.setLayout(l)
+        return w
+    def ver_page(self):
+        w = QWidget()
+        l = QVBoxLayout()
+        l.addWidget(QLabel("ver (WIP)"))
+        w.setLayout(l)
+        return w
 
 
 class settings_p(QWidget):
@@ -98,30 +118,41 @@ class settings_p(QWidget):
 
         # SECCIÓN DEL PERFIL
         perfil = QHBoxLayout()
-        layout.addWidget(perfil)
+        layout.addLayout(perfil)
 
         # IZQUIERDA - foto de perfil y selector de esta
-        foto_layout = QVBoxLayout()
+        self.foto_layout = QVBoxLayout()
         self.foto_shaper = ImagenPerfil()
         self.foto_archivo = SubidorArchivos()
-        foto_layout.addWidget(self.foto_shaper)
-        foto_layout.addWidget(self.foto_archivo)
+        self.foto_layout.addWidget(self.foto_shaper)
+        self.foto_layout.addWidget(self.foto_archivo)
+        perfil.addLayout(self.foto_layout)
 
-        p_userData = QVBoxLayout()
-        p_userData.addWidget(QLabel("Nombre de usuario"))
+        self.foto_archivo.arch.connect(self.foto_shaper.carga_imagen)
+
+        self.p_userData = QVBoxLayout()
+        self.p_userData.addWidget(QLabel("Nombre de usuario"))
         self.nombre_user = QLabel("wasa")
         nombre_upd = QPushButton("Cambiar Nombre")
+        self.p_userData.addWidget(nombre_upd)
         nombre_upd.clicked.connect(self.cambianombre)
+        perfil.addLayout(self.p_userData)
 
     def cambianombre(self):
-        nom_upd = QLineEdit("Ingrese nuevo nombre...")
-        nom_upd.returnPressed.connect(self.nom_upd)
+        self.nom_upd_input = QLineEdit(self.nombre_user.text())
+        self.p_userData.addWidget(self.nom_upd_input)
+        self.nom_upd_input.returnPressed.connect(lambda: self.nom_upd(self.nom_upd_input.text(), self.nom_upd_input))
+    
 
-    def nom_upd(self, newName):
-        self.nombre_user = QLabel(str(newName).strip())
+    def nom_upd(self, newName, input_place):
+        if 1 < len(newName.strip()) < 40:
+            self.nombre_user.setText(newName.strip())
+            input_place.hide()
+        else: pass # hace falta editar el mensaje de error
 
 
 class SubidorArchivos(QWidget):
+    arch = pyqtSignal(str)
     def __init__(self, parent = None):
         super().__init__(parent)
         layout = QVBoxLayout()
@@ -133,24 +164,29 @@ class SubidorArchivos(QWidget):
 
         boton = QPushButton("Seleccionar foto")
         boton.clicked.connect(self.foto_select)
-        layout.addWidget(boton)
+        layout.addWidget(boton) 
         self.ruta = None
 
 
     def foto_select(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "seleccionar archivo", "", "Imágenes (*.png *.jpg *jpeg);;")
         if ruta:
-            self.ruta = ruta
-
+            if ruta and ruta.lower().endswith(('.png', '.jpg', '.jpeg')):
+                self.ruta = ruta
+                self.arch.emit(ruta)
+            elif ruta:
+                print("Formato no soportado")
 
 class ImagenPerfil(QLabel):
-    def __init__(self, ruta_imagen, diametro=100, parent=None):
+    def __init__(self, diametro=30, parent=None):
         super().__init__(parent)
         self.diametro = diametro
         self.setFixedSize(diametro, diametro)
+        self.pixmap_o = None
 
-        pixmap_original = QPixmap(ruta_imagen)
-        self.setPixmap(self.recortar_circulo(pixmap_original))
+    def carga_imagen(self, ruta_imagen):
+        self.pixmap_o = QPixmap(ruta_imagen)
+        self.setPixmap(self.recortar_circulo(self.pixmap_o))
 
     def recortar_circulo(self, pixmap):
         # Escala la imagen para llenar el círculo
