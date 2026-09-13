@@ -51,7 +51,7 @@ class ColoresConfig:
             "boton":     base - 1,
         }
 
-    def legibilidad(v, hex_fondo):
+    def legibilidad(self, hex_fondo):
         hex_fondo = hex_fondo.lstrip("#")
         r, g, b = int(hex_fondo[0:2], 16), int(hex_fondo[2:4], 16), int(hex_fondo[4:6], 16)
         luminancia = (0.299 * r + 0.587 * g + 0.114 * b) / 255
@@ -100,6 +100,26 @@ class ColoresConfig:
                 }}
 
         QLineEdit{{color: {texto};}}
+
+        QComboBox {{
+            background-color: {colores['fondo_tarjeta']};
+            color: {texto};
+            border: 1px solid {colores['borde']};
+            }}
+        
+        QComboBox QAbstractItemView {{
+            color: {texto};
+            background-color: {colores['fondo_tarjeta']};
+            selection-background-color: {colores['acento']};
+            selection-color: white;
+        }}
+        
+        QSpinBox {{
+            background-color: {colores['fondo_tarjeta']};
+            color: {texto};
+            border: 1px solid {colores['borde']};
+            }}
+            
         """
 
 
@@ -127,7 +147,11 @@ class Idiomas:
                     "text_color_title":    "Color del texto",
                     "menu_color_title":    "Color del menú",
                     "texto_title":         "Tamaño del texto",
-                    "idioma_title":        "Idioma"
+                    "idioma_title":        "Idioma",
+                    "texto_button":        "Cambiar",
+                    "archivo_title":       "Archivo",
+                    "edicion_title":      "Edición",
+                    "ver_title":          "Ver"
 
                 },
                 "en": {
@@ -152,7 +176,11 @@ class Idiomas:
                     "text_color_title":    "Text color",
                     "menu_color_title":    "Menu color",
                     "texto_title":         "Text size",
-                    "idioma_title":        "Language"
+                    "idioma_title":        "Language",
+                    "texto_button":        "Change",
+                    "archivo_title":       "File",
+                    "edicion_title":      "Edit",
+                    "ver_title":          "View"
                 },
             }
 
@@ -185,6 +213,11 @@ class Sistema(QMainWindow):
         scroll.setWidget(self.settings_page)
         scroll.setWidgetResizable(True)   
 
+        # títulos para los WIP
+        self.archivo_title = QLabel()
+        self.edicion_title = QLabel()
+        self.ver_title = QLabel()
+
         # Asignación de distintas pestañas en función de la opción del menú elegida
         self.contenedor.addWidget(self.archivo_page())
         self.contenedor.addWidget(self.edicion_page())
@@ -193,7 +226,6 @@ class Sistema(QMainWindow):
 
         #Barrita superior
         self.menu = self.menuBar()
-
 
         # --- BOTONES Y ACCIONES ---
         self.m_archivo = QAction("", self)
@@ -246,6 +278,9 @@ class Sistema(QMainWindow):
         self.m_edits.setText(idioma_data["menu_edicion"])
         self.m_ver.setText(idioma_data["menu_ver"])
         self.m_settings.setText(idioma_data["menu_config"])
+        self.archivo_title.setText(idioma_data["menu_archivo"])
+        self.edicion_title.setText(idioma_data["menu_edicion"])
+        self.ver_title.setText(idioma_data["menu_ver"])
         self.settings_page.retraducir()
 
     def f_tamano_upd(self, new_tamano):
@@ -275,13 +310,13 @@ class Sistema(QMainWindow):
         return w
  
     def archivo_page(self):
-        return self._pagina_placeholder("Archivo (WIP)")
+        return self._pagina_placeholder(self.archivo_title.text())
  
     def edicion_page(self):
-        return self._pagina_placeholder("Edición (WIP)")
+        return self._pagina_placeholder(self.edicion_title.text())
  
     def ver_page(self):
-        return self._pagina_placeholder("Ver (WIP)")
+        return self._pagina_placeholder(self.ver_title.text())
 
 
 class settings_p(QWidget):
@@ -460,6 +495,8 @@ class settings_p(QWidget):
         self.menu_color_title.setText(self.t["menu_color_title"])
         self.texto_title.setText(self.t["texto_title"])
         self.idioma_title.setText(self.t["idioma_title"])
+        self.text_color_boton.setText(self.t["texto_button"])
+        self.menu_color_boton.setText(self.t["texto_button"])
 
 
     def linea_division(self):
