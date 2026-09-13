@@ -11,7 +11,7 @@ Para el nombre de usuario se podrá escribir texto, que no sea ni NULO ni de un 
 El guardado se hará en JSON con el fin de conservar los tipos de valor almacenados.
 
 """
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QHBoxLayout, QFileDialog, QMessageBox, QScrollArea, QFrame, QGroupBox, QComboBox, QSpinBox, QColorDialog)
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QHBoxLayout, QFileDialog, QMessageBox, QScrollArea, QFrame, QGroupBox, QComboBox, QSpinBox, QColorDialog, QCheckBox, QSlider, QTextEdit)
 from PyQt6.QtGui import QGuiApplication, QAction, QPixmap, QPainter, QPainterPath, QColor
 from PyQt6.QtCore import Qt, pyqtSignal
 class ColoresConfig:
@@ -119,7 +119,29 @@ class ColoresConfig:
             color: {texto};
             border: 1px solid {colores['borde']};
             }}
-            
+                QCheckBox {{
+            color: {texto};
+            font-size: {t_letra['texto']}pt;
+        }}
+        QTextEdit {{
+            background-color: {colores['fondo_tarjeta']};
+            color: {texto};
+            border: 1px solid {colores['borde']};
+            border-radius: 6px;
+            font-size: {t_letra['texto']}pt;
+        }}
+        QSlider::groove:horizontal {{
+            background: {colores['borde']};
+            height: 6px;
+            border-radius: 3px;
+        }}
+        QSlider::handle:horizontal {{
+            background: {colores['acento']};
+            width: 14px;
+            margin: -4px 0;
+            border-radius: 7px;
+        }}
+
         """
 
 
@@ -149,9 +171,28 @@ class Idiomas:
                     "texto_title":         "Tamaño del texto",
                     "idioma_title":        "Idioma",
                     "texto_button":        "Cambiar",
-                    "archivo_title":       "Archivo",
-                    "edicion_title":      "Edición",
-                    "ver_title":          "Ver"
+                    "archivo_titulo":       "Archivo",
+                    "edicion_titulo":      "Edición",
+                    "archivo_grupo":      "Documentos recientes",
+                    "archivo_doc1":       "documento_1.txt",
+                    "archivo_doc2":       "reporte_final.docx",
+                    "archivo_doc3":       "notas.md",
+                    "archivo_nuevo":      "Nuevo archivo",
+                    "archivo_abrir":      "Abrir archivo",
+                    "edicion_titulo":     "Edición",
+                    "edicion_grupo":      "Herramientas",
+                    "edicion_deshacer":   "Deshacer",
+                    "edicion_rehacer":    "Rehacer",
+                    "edicion_copiar":     "Copiar",
+                    "edicion_pegar":      "Pegar",
+                    "edicion_cortar":     "Cortar",
+                    "edicion_placeholder": "Escribe aquí para probar la apariencia...",
+                    "ver_titulo":         "Ver",
+                    "ver_grupo":          "Opciones de vista",
+                    "ver_sidebar":        "Mostrar barra lateral",
+                    "ver_pantalla":       "Modo pantalla completa",
+                    "ver_zoom":           "Zoom",
+
 
                 },
                 "en": {
@@ -178,9 +219,29 @@ class Idiomas:
                     "texto_title":         "Text size",
                     "idioma_title":        "Language",
                     "texto_button":        "Change",
-                    "archivo_title":       "File",
-                    "edicion_title":      "Edit",
-                    "ver_title":          "View"
+                    "archivo_titulo":       "File",
+                    "edicion_titulo":      "Edit",
+                    "archivo_titulo":     "File",
+                    "archivo_grupo":      "Recent documents",
+                    "archivo_doc1":       "document_1.txt",
+                    "archivo_doc2":       "final_report.docx",
+                    "archivo_doc3":       "notes.md",
+                    "archivo_nuevo":      "New file",
+                    "archivo_abrir":      "Open file",
+                    "edicion_titulo":     "Edit",
+                    "edicion_grupo":      "Tools",
+                    "edicion_deshacer":   "Undo",
+                    "edicion_rehacer":    "Redo",
+                    "edicion_copiar":     "Copy",
+                    "edicion_pegar":      "Paste",
+                    "edicion_cortar":     "Cut",
+                    "edicion_placeholder": "Type here to preview the styling...",
+                    "ver_titulo":         "View",
+                    "ver_grupo":          "View options",
+                    "ver_sidebar":        "Show sidebar",
+                    "ver_pantalla":       "Fullscreen mode",
+                    "ver_zoom":           "Zoom",
+
                 },
             }
 
@@ -214,14 +275,15 @@ class Sistema(QMainWindow):
         scroll.setWidgetResizable(True)   
 
         # títulos para los WIP
-        self.archivo_title = QLabel()
-        self.edicion_title = QLabel()
-        self.ver_title = QLabel()
+        self.archivo_widget = ArchivoPage()
+        self.edicion_widget = EdicionPage()
+        self.ver_widget = VerPage()
+
 
         # Asignación de distintas pestañas en función de la opción del menú elegida
-        self.contenedor.addWidget(self.archivo_page())
-        self.contenedor.addWidget(self.edicion_page())
-        self.contenedor.addWidget(self.ver_page())
+        self.contenedor.addWidget(self.archivo_widget)
+        self.contenedor.addWidget(self.edicion_widget)
+        self.contenedor.addWidget(self.ver_widget)
         self.contenedor.addWidget(scroll)
 
         #Barrita superior
@@ -278,10 +340,11 @@ class Sistema(QMainWindow):
         self.m_edits.setText(idioma_data["menu_edicion"])
         self.m_ver.setText(idioma_data["menu_ver"])
         self.m_settings.setText(idioma_data["menu_config"])
-        self.archivo_title.setText(idioma_data["menu_archivo"])
-        self.edicion_title.setText(idioma_data["menu_edicion"])
-        self.ver_title.setText(idioma_data["menu_ver"])
         self.settings_page.retraducir()
+        self.archivo_widget.retraducir(idioma_data)
+        self.edicion_widget.retraducir(idioma_data)
+        self.ver_widget.retraducir(idioma_data)
+
 
     def f_tamano_upd(self, new_tamano):
         self.tema_manager.tamano_letra = new_tamano
@@ -318,6 +381,131 @@ class Sistema(QMainWindow):
     def ver_page(self):
         return self._pagina_placeholder(self.ver_title.text())
 
+class ArchivoPage(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(16)
+        self.setLayout(layout)
+ 
+        self.titulo = QLabel()
+        self.titulo.setObjectName("TituloPagina")
+        layout.addWidget(self.titulo)
+ 
+        self.grupo = QGroupBox()
+        grupo_layout = QVBoxLayout()
+        self.grupo.setLayout(grupo_layout)
+ 
+        self.doc1 = QLabel()
+        self.doc2 = QLabel()
+        self.doc3 = QLabel()
+        grupo_layout.addWidget(self.doc1)
+        grupo_layout.addWidget(self.doc2)
+        grupo_layout.addWidget(self.doc3)
+ 
+        botones = QHBoxLayout()
+        self.boton_nuevo = QPushButton()
+        self.boton_abrir = QPushButton()
+        botones.addWidget(self.boton_nuevo)
+        botones.addWidget(self.boton_abrir)
+        grupo_layout.addLayout(botones)
+ 
+        layout.addWidget(self.grupo)
+        layout.addStretch()
+ 
+    def retraducir(self, t):
+        self.titulo.setText(t["archivo_titulo"])
+        self.grupo.setTitle(t["archivo_grupo"])
+        self.doc1.setText("📄 " + t["archivo_doc1"])
+        self.doc2.setText("📄 " + t["archivo_doc2"])
+        self.doc3.setText("📄 " + t["archivo_doc3"])
+        self.boton_nuevo.setText(t["archivo_nuevo"])
+        self.boton_abrir.setText(t["archivo_abrir"])
+ 
+ 
+class EdicionPage(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(16)
+        self.setLayout(layout)
+ 
+        self.titulo = QLabel()
+        self.titulo.setObjectName("TituloPagina")
+        layout.addWidget(self.titulo)
+ 
+        self.grupo = QGroupBox()
+        grupo_layout = QVBoxLayout()
+        self.grupo.setLayout(grupo_layout)
+ 
+        botones = QHBoxLayout()
+        self.boton_deshacer = QPushButton()
+        self.boton_rehacer = QPushButton()
+        self.boton_copiar = QPushButton()
+        self.boton_pegar = QPushButton()
+        self.boton_cortar = QPushButton()
+        for b in (self.boton_deshacer, self.boton_rehacer, self.boton_copiar, self.boton_pegar, self.boton_cortar):
+            botones.addWidget(b)
+        grupo_layout.addLayout(botones)
+ 
+        self.texto_editable = QTextEdit()
+        grupo_layout.addWidget(self.texto_editable)
+ 
+        layout.addWidget(self.grupo)
+ 
+    def retraducir(self, t):
+        self.titulo.setText(t["edicion_titulo"])
+        self.grupo.setTitle(t["edicion_grupo"])
+        self.boton_deshacer.setText(t["edicion_deshacer"])
+        self.boton_rehacer.setText(t["edicion_rehacer"])
+        self.boton_copiar.setText(t["edicion_copiar"])
+        self.boton_pegar.setText(t["edicion_pegar"])
+        self.boton_cortar.setText(t["edicion_cortar"])
+        self.texto_editable.setPlaceholderText(t["edicion_placeholder"])
+ 
+ 
+class VerPage(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(16)
+        self.setLayout(layout)
+ 
+        self.titulo = QLabel()
+        self.titulo.setObjectName("TituloPagina")
+        layout.addWidget(self.titulo)
+ 
+        self.grupo = QGroupBox()
+        grupo_layout = QVBoxLayout()
+        self.grupo.setLayout(grupo_layout)
+ 
+        self.check_sidebar = QCheckBox()
+        self.check_pantalla = QCheckBox()
+        grupo_layout.addWidget(self.check_sidebar)
+        grupo_layout.addWidget(self.check_pantalla)
+ 
+        zoom_layout = QHBoxLayout()
+        self.zoom_label = QLabel()
+        self.zoom_slider = QSlider(Qt.Orientation.Horizontal)
+        self.zoom_slider.setRange(50, 150)
+        self.zoom_slider.setValue(100)
+        zoom_layout.addWidget(self.zoom_label)
+        zoom_layout.addWidget(self.zoom_slider)
+        grupo_layout.addLayout(zoom_layout)
+ 
+        layout.addWidget(self.grupo)
+        layout.addStretch()
+ 
+    def retraducir(self, t):
+        self.titulo.setText(t["ver_titulo"])
+        self.grupo.setTitle(t["ver_grupo"])
+        self.check_sidebar.setText(t["ver_sidebar"])
+        self.check_pantalla.setText(t["ver_pantalla"])
+        self.zoom_label.setText(t["ver_zoom"])
+ 
 
 class settings_p(QWidget):
     idioma_cambiado = pyqtSignal(str)
