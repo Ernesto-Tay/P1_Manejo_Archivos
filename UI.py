@@ -11,8 +11,8 @@ Para el nombre de usuario se podrá escribir texto, que no sea ni NULO ni de un 
 El guardado se hará en JSON con el fin de conservar los tipos de valor almacenados.
 
 """
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QHBoxLayout, QFileDialog, QMessageBox, QScrollArea, QFrame, QGroupBox, QComboBox, QSpinBox)
-from PyQt6.QtGui import QGuiApplication, QAction, QPixmap, QPainter, QPainterPath
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QStackedWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QHBoxLayout, QFileDialog, QMessageBox, QScrollArea, QFrame, QGroupBox, QComboBox, QSpinBox, QColorDialog)
+from PyQt6.QtGui import QGuiApplication, QAction, QPixmap, QPainter, QPainterPath, QColor
 from PyQt6.QtCore import Qt, pyqtSignal
 class ColoresConfig:
     def __init__(self):
@@ -35,6 +35,12 @@ class ColoresConfig:
         self.color_menu = {"claro": "#E05D00", "oscuro":"#ff0000"}
         self.color_letra = {"claro": "#000000", "oscuro":"#e6e8ec"}
         self.tamano_letra = 12
+
+    def set_color_menu(self, mode, color):
+        self.color_menu[mode] = color
+
+    def set_color_letra(self, mode, color):
+        self.color_letra[mode] = color
 
     def tamanos(self):
         base = self.tamano_letra
@@ -114,7 +120,15 @@ class Idiomas:
                     "msg_error_titulo":   "Error",
                     "msg_error_texto":    "El nombre no puede estar vacío ni superar los 40 caracteres",
                     "label_foto":         "Cambiar foto de perfil",
-                    "boton_foto":         "Seleccionar una foto..."
+                    "boton_foto":         "Seleccionar una foto...",
+                    "apariencia_title":    "Apariencia",
+                    "tema_title":          "Tema",
+                    "acces_title":         "Accesibilidad",
+                    "text_color_title":    "Color del texto",
+                    "menu_color_title":    "Color del menú",
+                    "texto_title":         "Tamaño del texto",
+                    "idioma_title":        "Idioma"
+
                 },
                 "en": {
                     "titulo_settings":    "Settings",
@@ -131,7 +145,14 @@ class Idiomas:
                     "msg_error_titulo":   "Error",
                     "msg_error_texto":    "Name cannot be empty or exceed 40 characters",
                     "label_foto":         "Change profile picture",
-                    "boton_foto":         "Browse pictures..."
+                    "boton_foto":         "Browse pictures...",
+                    "apariencia_title":    "Appearance",
+                    "tema_title":          "Theme",
+                    "acces_title":         "Accessibility",
+                    "text_color_title":    "Text color",
+                    "menu_color_title":    "Menu color",
+                    "texto_title":         "Text size",
+                    "idioma_title":        "Language"
                 },
             }
 
@@ -204,7 +225,11 @@ class Sistema(QMainWindow):
         self.idioma = "es"
         self.idioma_manager = Idiomas()
         self.idioma_upd(self.idioma)
-        self.settings_page.idioma.connect(self.idioma_upd)
+        self.settings_page.idioma_cambiado.connect(self.idioma_upd)
+        self.settings_page.texto_cambiado.connect(self.f_tamano_upd)
+        self.settings_page.tema_cambiado.connect(self.color_upd)
+        self.settings_page.color_texto_cambiado.connect(self.f_color_upd)
+        self.settings_page.color_menu_cambiado.connect(self.m_color_upd)
 
 
 
@@ -223,10 +248,17 @@ class Sistema(QMainWindow):
         self.m_settings.setText(idioma_data["menu_config"])
         self.settings_page.retraducir()
 
+    def f_tamano_upd(self, new_tamano):
+        self.tema_manager.tamano_letra = new_tamano
+        self.color_upd(self.tema_select)
 
-    def f_tamano_upd(self): pass
-    def f_color_upd(self): pass
-    def m_color_upd(self): pass
+    def f_color_upd(self, hex):
+        self.tema_manager.set_color_letra(self.tema_select, hex)
+        self.color_upd(self.tema_select)
+
+    def m_color_upd(self, hex):
+        self.tema_manager.set_color_menu(self.tema_select, hex)
+        self.color_upd(self.tema_select)
 
     
     # funciones patito para los layouts adicionales (solo para que esta madre no se ande crasheando)
@@ -253,7 +285,11 @@ class Sistema(QMainWindow):
 
 
 class settings_p(QWidget):
-    idioma = pyqtSignal(str)
+    idioma_cambiado = pyqtSignal(str)
+    texto_cambiado = pyqtSignal(int)
+    tema_cambiado = pyqtSignal(str)
+    color_texto_cambiado = pyqtSignal(str)
+    color_menu_cambiado = pyqtSignal(str)
     def __init__(self, parent = None, idioma = "es"):
         super().__init__(parent)
         layout = QVBoxLayout()
@@ -317,7 +353,7 @@ class settings_p(QWidget):
         self.idioma_title = QLabel()
         self.idioma_select = QComboBox()
         self.idioma_select.addItems(["español/es-ES", "English/en-US"])
-        self.idioma_select.CurrentIndexChanged.connect(self.cambia_idioma)
+        self.idioma_select.currentIndexChanged.connect(self.cambia_idioma)
 
         self.texto_title = QLabel()
         self.texto_select = QSpinBox()
@@ -326,14 +362,51 @@ class settings_p(QWidget):
         self.texto_select.setSuffix(" pt")
         self.texto_select.valueChanged.connect(self.cambia_tamano)
 
+        self.acces_layout.addWidget(self.Access_title)
+        self.acces_layout.addWidget(self.idioma_title)
+        self.acces_layout.addWidget(self.idioma_select)
+        self.acces_layout.addWidget(self.texto_title)
+        self.acces_layout.addWidget(self.texto_select)
+
         # DERECHA - apariencia
+        self.apariencia_layout = QVBoxLayout()
+        self.apariencia_title = QLabel()
+        self.tema_title = QLabel()
+        self.tema_select = QComboBox()
+        self.tema_select.addItems(["Modo Claro", "Modo Oscuro"])
+        self.tema_select.currentIndexChanged.connect(lambda index: self.color_upd("claro" if index == 0 else "oscuro"))
 
+        self.text_color_title = QLabel()
+        self.text_color_select = QFrame()
+        self.text_color_select.setFixedSize(24, 24)
+        self.text_color_select.setFrameShape(QFrame.Shape.Box)
+        self.text_color_boton = QPushButton()
+        self.text_color_boton.clicked.connect(self.cambia_color_texto)
+        fila_color_texto = QHBoxLayout()
+        fila_color_texto.addWidget(self.text_color_select)
+        fila_color_texto.addWidget(self.text_color_boton)
 
+        self.menu_color_title = QLabel()
+        self.menu_color_select = QFrame()
+        self.menu_color_select.setFixedSize(24, 24)
+        self.menu_color_select.setFrameShape(QFrame.Shape.Box)
+        self.menu_color_boton = QPushButton()
+        self.menu_color_boton.clicked.connect(self.cambia_color_menu)
+        fila_color_menu = QHBoxLayout()
+        fila_color_menu.addWidget(self.menu_color_select)
+        fila_color_menu.addWidget(self.menu_color_boton)
 
+        self.apariencia_layout.addWidget(self.apariencia_title)
+        self.apariencia_layout.addWidget(self.tema_title)
+        self.apariencia_layout.addWidget(self.tema_select)
+        self.apariencia_layout.addWidget(self.text_color_title)
+        self.apariencia_layout.addLayout(fila_color_texto)
+        self.apariencia_layout.addWidget(self.menu_color_title)
+        self.apariencia_layout.addLayout(fila_color_menu)
+
+        general.addLayout(self.acces_layout)
+        general.addLayout(self.apariencia_layout)
         self.t = None
-
-
-        # SECCIÓN DE EDICIÓN
 
     def cambianombre(self):
         self.nom_upd_input.show()
@@ -341,12 +414,28 @@ class settings_p(QWidget):
 
     def cambia_idioma(self, index):
         resultado = "es" if index == 0 else "en"
-        self.idioma.emit(resultado)
+        self.idioma_cambiado.emit(resultado)
 
-    def cambia_tamano(self): pass
+    def cambia_tamano(self, pt):
+        self.texto_cambiado.emit(pt)
+
+    def color_upd(self, new_color):
+        self.tema_cambiado.emit(new_color)
+
+    def cambia_color_texto(self):
+        color = QColorDialog.getColor(initial=self.text_color_select.palette().window().color(), parent=self, title="Seleccionar color de texto")
+        if color.isValid():
+            self.text_color_select.setStyleSheet(f"background-color: {color.name()};")
+            self.color_texto_cambiado.emit(color.name())
+
+    def cambia_color_menu(self):
+        color = QColorDialog.getColor(initial=self.menu_color_select.palette().window().color(), parent=self, title="Seleccionar color de menú")
+        if color.isValid():
+            self.menu_color_select.setStyleSheet(f"background-color: {color.name()};")
+            self.color_menu_cambiado.emit(color.name())
 
     def nom_upd(self, newName, input_place):
-        if 1 < len(newName.strip()) < 40:
+        if 1 <= len(newName.strip()) <= 40:
             self.nombre_user.setText(newName.strip())
             input_place.hide()
             self.nombre_upd.show()
@@ -363,6 +452,13 @@ class settings_p(QWidget):
         self.nom_upd_input.setPlaceholderText(self.t["placeholder_nombre"])
         self.foto_archivo.t_perfil.setText(self.t["label_foto"])
         self.foto_archivo.boton.setText(self.t["boton_foto"])
+        self.grupo_general.setTitle(self.t["apariencia_title"])
+        self.tema_title.setText(self.t["tema_title"])
+        self.Access_title.setText(self.t["acces_title"])
+        self.text_color_title.setText(self.t["text_color_title"])
+        self.menu_color_title.setText(self.t["menu_color_title"])
+        self.texto_title.setText(self.t["texto_title"])
+        self.idioma_title.setText(self.t["idioma_title"])
 
 
     def linea_division(self):
@@ -389,7 +485,7 @@ class SubidorArchivos(QWidget):
 
 
     def foto_select(self):
-        ruta, _ = QFileDialog.getOpenFileName(self, "seleccionar archivo", "", "Imágenes (*.png *.jpg *jpeg);;")
+        ruta, _ = QFileDialog.getOpenFileName(self, "seleccionar archivo", "", "Imágenes (*.png *.jpg *.jpeg);;")
         if ruta:
             if ruta and ruta.lower().endswith(('.png', '.jpg', '.jpeg')):
                 self.ruta = ruta
