@@ -36,8 +36,8 @@ class info_mng:
                     self.info = info
                     return "Advertencia", "El archivo original está corrupto o no hay permisos de lectura. Se usará la información del backup.", info
             except (json.JSONDecodeError, OSError):
-                pass
-        return "Error", "No se pudo obtener la información, se inicializará con valores por defecto.", None
+                return "Error", "No se pudo obtener la información, se inicializará con valores por defecto.", None
+        
 
 
     def guardar_info(self, info, route = "info_sys.json"):

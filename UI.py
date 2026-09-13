@@ -748,7 +748,8 @@ class SubidorArchivos(QWidget):
     def foto_select(self, entrada = None):
         if entrada is not None:
             ruta = entrada
-        ruta, _ = QFileDialog.getOpenFileName(self, "seleccionar archivo", "", "Imágenes (*.png *.jpg *.jpeg);;")
+        else:
+            ruta, _ = QFileDialog.getOpenFileName(self, "seleccionar archivo", "", "Imágenes (*.png *.jpg *.jpeg);;")
         if ruta:
             if ruta and ruta.lower().endswith(('.png', '.jpg', '.jpeg')):
                 
@@ -795,6 +796,7 @@ class ImagenPerfil(QLabel):
 
 app = QApplication(sys.argv)
 system = Sistema()
+system.carga_sys()
 system.show()
 res = app.exec()
 system.guardar_sys()
