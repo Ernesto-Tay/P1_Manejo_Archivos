@@ -1,4 +1,5 @@
 import sys
+import os
 from Manejo_info import info_mng
 """
 Modo claro: sección de strings donde se contengan los colores usados para este modo, y que en el guardado se mantenga, así igual con el modo oscuro
@@ -377,6 +378,11 @@ class Sistema(QMainWindow):
         status, msg, info = self.info_manager.cargar_info()
         if status == "Éxito":
             self.username = info.get("username", None)
+            foto = info.get("ruta_foto")
+            if foto and not os.path.exists(foto):
+                QMessageBox.warning(self, "Aviso", "No se encontró la foto en el sistema ¿Se cambió su nombre, movió o eliminó?")
+                foto = None
+            self.settings_page.foto_archivo.foto_select(foto)
             self.idioma_upd(info.get("idioma", "es"))
             self.color_upd(info.get("tema", "claro"))
             self.f_tamano_upd(info.get("tamano_texto", 12))
@@ -385,8 +391,10 @@ class Sistema(QMainWindow):
         else:
             QMessageBox.warning(self, status, msg)
     def guardar_sys(self):
+        print(type(self.settings_page.foto_archivo.ruta), repr(self.settings_page.foto_archivo.ruta))
         info = {
             "username": self.username,
+            "ruta_foto": self.settings_page.foto_archivo.ruta,
             "idioma": self.idioma,
             "tema": self.tema_select,
             "tamano_texto": self.tema_manager.tamano_letra,
@@ -737,10 +745,13 @@ class SubidorArchivos(QWidget):
         self.ruta = None
 
 
-    def foto_select(self):
+    def foto_select(self, entrada = None):
+        if entrada is not None:
+            ruta = entrada
         ruta, _ = QFileDialog.getOpenFileName(self, "seleccionar archivo", "", "Imágenes (*.png *.jpg *.jpeg);;")
         if ruta:
             if ruta and ruta.lower().endswith(('.png', '.jpg', '.jpeg')):
+                
                 self.ruta = ruta
                 self.arch.emit(ruta)
             elif ruta:
@@ -785,4 +796,6 @@ class ImagenPerfil(QLabel):
 app = QApplication(sys.argv)
 system = Sistema()
 system.show()
-sys.exit(app.exec())
+res = app.exec()
+system.guardar_sys()
+sys.exit(res)

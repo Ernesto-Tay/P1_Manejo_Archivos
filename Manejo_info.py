@@ -17,6 +17,8 @@ class info_mng:
 
     def cargar_info(self, route = "info_sys.json"):
         backup = route + ".bak"
+        if not os.path.exists(route) and not os.path.exists(backup):
+            return "Sin_datos", "Primera vez que se ejecuta el programa.", None
         if os.path.exists(route):
             try:
                 with open(route, "r", encoding="utf-8") as a:
@@ -41,9 +43,10 @@ class info_mng:
     def guardar_info(self, info, route = "info_sys.json"):
         backup = route + ".bak"
         try:
-           with open(backup, "w", encoding="utf-8") as a:
-               with open(route, "r" , encoding="utf-8") as b:
-                   a.write(b.read())
+            with open(route, "r", encoding="utf-8") as b:
+                contenido_actual = b.read()
+            with open(backup, "w", encoding="utf-8") as a:
+                a.write(contenido_actual)
         except OSError:
             pass
 
