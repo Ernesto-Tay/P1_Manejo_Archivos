@@ -32,6 +32,22 @@ class info_mng:
                     info = json.load(a)
                     return "Advertencia", "El archivo original está corrupto o no hay permisos de lectura. Se usará la información del backup.", info
             except (json.JSONDecodeError, OSError):
-                return "Error", "No se pudo obtener la información, se inicializará con valores por defecto.", None
+                pass
+        return "Error", "No se pudo obtener la información, se inicializará con valores por defecto.", None
 
-            
+
+    def guardar_info(self, info, route = "info_sys.json"):
+        backup = route + ".bak"
+        try:
+           with open(backup, "w", enconding="utf-8") as a:
+               with open(route, "r" , encoding="utf-8") as b:
+                   a.write(b.read())
+        except OSError:
+            pass
+
+        try:
+            with open(route, "w", encoding="utf-8") as a:
+                json.dump(info, a, indent=4)
+            return "Éxito", "Información guardada correctamente."
+        except OSError:
+            return "Error", "No se pudo guardar la información."
