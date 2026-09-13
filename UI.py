@@ -321,6 +321,7 @@ class settings_p(QWidget):
         self.foto_archivo.arch.connect(self.foto_shaper.carga_imagen)
 
         # DERECHA - zona para cambiar el nombre de perfil acual
+        # DERECHA - zona para cambiar el nombre de perfil acual
         self.p_userData = QVBoxLayout()
         self.nombreHeader = QLabel("")
         self.p_userData.addWidget(self.nombreHeader)
