@@ -1,4 +1,5 @@
 import sys
+from Manejo_info import info_mng
 """
 Modo claro: sección de strings donde se contengan los colores usados para este modo, y que en el guardado se mantenga, así igual con el modo oscuro
 Selección de colores: una serie de códigos de color que se implementarán en función del seleccionado por el usuario, y se actualizarán como tal
@@ -253,6 +254,8 @@ class Sistema(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.info_manager = info_mng()
+
         # datos del cosito de PyQt
         self.setWindowTitle("Config Simulator")
         p = QGuiApplication.primaryScreen().geometry()
@@ -325,8 +328,6 @@ class Sistema(QMainWindow):
         self.settings_page.color_texto_cambiado.connect(self.f_color_upd)
         self.settings_page.color_menu_cambiado.connect(self.m_color_upd)
 
-
-
     def color_upd(self, new_color):
         self.tema_select = new_color
         qss = self.tema_manager.generar_qss(new_color)
@@ -371,6 +372,32 @@ class Sistema(QMainWindow):
         l.addStretch()
         w.setLayout(l)
         return w
+
+    def carga_sys(self):
+        status, msg, info = self.info_manager.cargar_info()
+        if status == "Éxito":
+            self.username = info.get("username", None)
+            self.idioma_upd(info.get("idioma", "es"))
+            self.color_upd(info.get("tema", "claro"))
+            self.f_tamano_upd(info.get("tamano_texto", 12))
+            self.f_color_upd(info.get("color_texto", "#000000"))
+            self.m_color_upd(info.get("color_menu", "#E05D00"))
+        else:
+            QMessageBox.warning(self, status, msg)
+    def guardar_sys(self):
+        info = {
+            "username": self.username,
+            "idioma": self.idioma,
+            "tema": self.tema_select,
+            "tamano_texto": self.tema_manager.tamano_letra,
+            "color_texto": self.tema_manager.color_letra[self.tema_select],
+            "color_menu": self.tema_manager.color_menu[self.tema_select]
+        }
+        status, msg = self.info_manager.guardar_info(info)
+        if status == "Éxito":
+            QMessageBox.information(self, status, msg)
+        else:
+            QMessageBox.Critical(self, status, msg)
  
     def archivo_page(self):
         return self._pagina_placeholder(self.archivo_title.text())
@@ -417,9 +444,9 @@ class ArchivoPage(QWidget):
     def retraducir(self, t):
         self.titulo.setText(t["archivo_titulo"])
         self.grupo.setTitle(t["archivo_grupo"])
-        self.doc1.setText("📄 " + t["archivo_doc1"])
-        self.doc2.setText("📄 " + t["archivo_doc2"])
-        self.doc3.setText("📄 " + t["archivo_doc3"])
+        self.doc1.setText("doc - " + t["archivo_doc1"])
+        self.doc2.setText("doc - " + t["archivo_doc2"])
+        self.doc3.setText("doc - " + t["archivo_doc3"])
         self.boton_nuevo.setText(t["archivo_nuevo"])
         self.boton_abrir.setText(t["archivo_abrir"])
  

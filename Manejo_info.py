@@ -21,6 +21,7 @@ class info_mng:
             try:
                 with open(route, "r", encoding="utf-8") as a:
                     info = json.load(a)
+                    self.info = info
                     return "Éxito", "Datos extraídos correctamente.", info
 
             except (json.JSONDecodeError, OSError):
@@ -30,6 +31,7 @@ class info_mng:
             try:
                 with open(backup, "r", encoding="utf-8") as a:
                     info = json.load(a)
+                    self.info = info
                     return "Advertencia", "El archivo original está corrupto o no hay permisos de lectura. Se usará la información del backup.", info
             except (json.JSONDecodeError, OSError):
                 pass
@@ -39,7 +41,7 @@ class info_mng:
     def guardar_info(self, info, route = "info_sys.json"):
         backup = route + ".bak"
         try:
-           with open(backup, "w", enconding="utf-8") as a:
+           with open(backup, "w", encoding="utf-8") as a:
                with open(route, "r" , encoding="utf-8") as b:
                    a.write(b.read())
         except OSError:
@@ -47,7 +49,7 @@ class info_mng:
 
         try:
             with open(route, "w", encoding="utf-8") as a:
-                json.dump(info, a, indent=4)
+                json.dump(info, a, indent=4, ensure_ascii=False)
             return "Éxito", "Información guardada correctamente."
         except OSError:
             return "Error", "No se pudo guardar la información."
