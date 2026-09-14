@@ -379,10 +379,12 @@ class Sistema(QMainWindow):
         if status == "Éxito":
             self.username = info.get("username", None)
             foto = info.get("ruta_foto")
-            if foto and not os.path.exists(foto):
+            if foto != None and not os.path.exists(foto):
                 QMessageBox.warning(self, "Aviso", "No se encontró la foto en el sistema ¿Se cambió su nombre, movió o eliminó?")
                 foto = None
-            self.settings_page.foto_archivo.foto_select(foto)
+            elif foto != None:
+                self.settings_page.foto_archivo.foto_select(foto)
+            else: pass
             self.idioma_upd(info.get("idioma", "es"))
             self.color_upd(info.get("tema", "claro"))
             self.f_tamano_upd(info.get("tamano_texto", 12))
@@ -390,8 +392,8 @@ class Sistema(QMainWindow):
             self.m_color_upd(info.get("color_menu", "#E05D00"))
         else:
             QMessageBox.warning(self, status, msg)
+
     def guardar_sys(self):
-        print(type(self.settings_page.foto_archivo.ruta), repr(self.settings_page.foto_archivo.ruta))
         info = {
             "username": self.username,
             "ruta_foto": self.settings_page.foto_archivo.ruta,
